@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPA 분석 결과</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+            background: #ffffff;
+            padding: 30px;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #1a1a1a;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 35px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #2563eb;
+        }
+        
+        .content-wrapper {
+            display: flex;
+            gap: 40px;
+            align-items: flex-start;
+        }
+        
+        .chart-section {
+            flex: 1.2;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 30px;
+        }
+        
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 550px;
+        }
+        
+        .legend-section {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .legend-box {
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 22px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-left: 5px solid;
+        }
+        
+        .legend-box.top-left {
+            border-left-color: #ef4444;
+        }
+        
+        .legend-box.top-right {
+            border-left-color: #10b981;
+        }
+        
+        .legend-box.bottom-left {
+            border-left-color: #f59e0b;
+        }
+        
+        .legend-box.bottom-right {
+            border-left-color: #6b7280;
+        }
+        
+        .legend-box h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 14px;
+            color: #1a1a1a;
+        }
+        
+        .legend-box ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .legend-box li {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #4b5563;
+            margin-bottom: 10px;
+            padding-left: 18px;
+            position: relative;
+        }
+        
+        .legend-box li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #9ca3af;
+            font-weight: bold;
+        }
+        
+        .chart-title {
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 20px;
+        }
+        
+        canvas {
+            border-radius: 8px;
+        }
+        
+        .quadrant-label {
+            position: absolute;
+            font-size: 13px;
+            font-weight: 600;
+            color: #6b7280;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>성취평가제 운영에 대한 IPA 분석 결과</h1>
+        
+        <div class="content-wrapper">
+            <div class="chart-section">
+                <div class="chart-title">중요도-만족도 분석 (IPA Matrix)</div>
+                <div class="chart-container">
+                    <canvas id="ipaChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="legend-section">
+                <div class="legend-box top-left">
+                    <h3>🔴 중점개선 영역</h3>
+                    <ul>
+                        <li>성취기준 및 성취 수준을 고려한 교수·학습 설계</li>
+                        <li>원점수 산출방식(내용/기준요소 점수방법 등) 수준을 낮춘 문항 출제(지필평가)</li>
+                        <li>학생의 수준을 고려한 문항 출제(수행평가)</li>
+                        <li>성취기준에 근거한 채점 기준 개발(수행평가)</li>
+                    </ul>
+                </div>
+                
+                <div class="legend-box top-right">
+                    <h3>🟢 유지강화 영역</h3>
+                    <ul>
+                        <li>성취기준에 기반한 교수·학습과 평가계획 수립</li>
+                        <li>학생 수준 및 학생 특성을 고려한 평가문항 출제</li>
+                        <li>성취(다양)도 단순 점수를 측정할 수 있는 적절한 난이도의 문항 출제</li>
+                    </ul>
+                </div>
+                
+                <div class="legend-box bottom-left">
+                    <h3>🟡 점진적인 영역</h3>
+                    <ul>
+                        <li>교육과정에 기반한 성취기준 이해</li>
+                        <li>성취기준에 근거한 학기 단위 성취수준 개발</li>
+                        <li>학생들의 성취기준 도달 정도를 파악하기 위한 평가 결과 분석</li>
+                        <li>평가 결과 분석을 통한 학생 피드백 제공</li>
+                    </ul>
+                </div>
+                
+                <div class="legend-box bottom-right">
+                    <h3>⚪ 지속관찰 영역</h3>
+                    <ul>
+                        <li>성취평가 결과를 교수·학습 및 평가 개선에 활용</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // IPA 데이터 (이미지에서 추출한 대략적인 위치)
+        const dataPoints = [
+            { id: 1, x: 4.15, y: 3.91, quadrant: 'bottomRight', label: '성취평가 결과를 교수·학습 및 평가 개선에 활용' },
+            { id: 2, x: 3.95, y: 3.93, quadrant: 'bottomLeft', label: '교육과정에 기반한 성취기준 이해' },
+            { id: 3, x: 4.20, y: 4.05, quadrant: 'topRight', label: '성취기준에 기반한 교수·학습과 평가계획 수립' },
+            { id: 4, x: 4.19, y: 4.02, quadrant: 'topRight', label: '학생 수준 및 학생 특성을 고려한 평가문항 출제' },
+            { id: 5, x: 4.23, y: 4.10, quadrant: 'topRight', label: '적절한 난이도의 문항 출제' },
+            { id: 6, x: 4.18, y: 4.08, quadrant: 'topRight', label: '성취기준 및 성취 수준을 고려한 교수·학습 설계' },
+            { id: 7, x: 4.00, y: 3.96, quadrant: 'bottomLeft', label: '성취기준에 근거한 학기 단위 성취수준 개발' },
+            { id: 8, x: 4.22, y: 4.08, quadrant: 'topRight', label: '원점수 산출방식 수준을 낮춘 문항 출제(지필평가)' },
+            { id: 9, x: 4.12, y: 4.08, quadrant: 'topRight', label: '학생의 수준을 고려한 문항 출제(수행평가)' },
+            { id: 10, x: 4.20, y: 3.93, quadrant: 'bottomRight', label: '성취기준 도달 정도 파악을 위한 평가 결과 분석' },
+            { id: 11, x: 4.13, y: 3.91, quadrant: 'bottomRight', label: '평가 결과 분석을 통한 학생 피드백 제공' },
+            { id: 12, x: 4.20, y: 3.94, quadrant: 'bottomRight', label: '성취기준에 근거한 채점 기준 개발(수행평가)' }
+        ];
+        
+        const ctx = document.getElementById('ipaChart').getContext('2d');
+        
+        const chart = new Chart(ctx, {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: '평가항목',
+                    data: dataPoints.map(p => ({ x: p.x, y: p.y, id: p.id, label: p.label })),
+                    backgroundColor: dataPoints.map(p => {
+                        if (p.quadrant === 'topRight') return '#10b98199';
+                        if (p.quadrant === 'topLeft') return '#ef444499';
+                        if (p.quadrant === 'bottomLeft') return '#f59e0b99';
+                        return '#6b728099';
+                    }),
+                    borderColor: dataPoints.map(p => {
+                        if (p.quadrant === 'topRight') return '#10b981';
+                        if (p.quadrant === 'topLeft') return '#ef4444';
+                        if (p.quadrant === 'bottomLeft') return '#f59e0b';
+                        return '#6b7280';
+                    }),
+                    borderWidth: 2,
+                    pointRadius: 8,
+                    pointHoverRadius: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        maxWidth: 350,
+                        titleFont: {
+                            size: 13,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 12
+                        },
+                        callbacks: {
+                            title: function(context) {
+                                return '[' + context[0].raw.id + '] ' + context[0].raw.label;
+                            },
+                            label: function(context) {
+                                return [
+                                    '중요도: ' + context.parsed.x.toFixed(2),
+                                    '만족도: ' + context.parsed.y.toFixed(2)
+                                ];
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: '중요도',
+                            font: {
+                                size: 15,
+                                weight: 'bold'
+                            },
+                            color: '#1f2937'
+                        },
+                        min: 3.85,
+                        max: 4.25,
+                        ticks: {
+                            stepSize: 0.05,
+                            font: {
+                                size: 12
+                            }
+                        },
+                        grid: {
+                            color: '#e5e7eb',
+                            lineWidth: 1
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: '만족도',
+                            font: {
+                                size: 15,
+                                weight: 'bold'
+                            },
+                            color: '#1f2937'
+                        },
+                        min: 3.88,
+                        max: 4.12,
+                        ticks: {
+                            stepSize: 0.05,
+                            font: {
+                                size: 12
+                            }
+                        },
+                        grid: {
+                            color: '#e5e7eb',
+                            lineWidth: 1
+                        }
+                    }
+                },
+                animation: {
+                    duration: 1500,
+                    easing: 'easeInOutQuart'
+                }
+            },
+            plugins: [{
+                afterDraw: function(chart) {
+                    const ctx = chart.ctx;
+                    const xAxis = chart.scales.x;
+                    const yAxis = chart.scales.y;
+                    
+                    // 중앙선 그리기
+                    ctx.save();
+                    ctx.strokeStyle = '#9ca3af';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([8, 4]);
+                    
+                    // 세로 중앙선 (x = 4.20)
+                    const xPos = xAxis.getPixelForValue(4.20);
+                    ctx.beginPath();
+                    ctx.moveTo(xPos, yAxis.top);
+                    ctx.lineTo(xPos, yAxis.bottom);
+                    ctx.stroke();
+                    
+                    // 가로 중앙선 (y = 4.00)
+                    const yPos = yAxis.getPixelForValue(4.00);
+                    ctx.beginPath();
+                    ctx.moveTo(xAxis.left, yPos);
+                    ctx.lineTo(xAxis.right, yPos);
+                    ctx.stroke();
+                    
+                    ctx.restore();
+                    
+                    // 각 데이터 포인트에 번호 표시
+                    ctx.fillStyle = '#1f2937';
+                    ctx.font = 'bold 11px "Malgun Gothic"';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    
+                    dataPoints.forEach(point => {
+                        const x = xAxis.getPixelForValue(point.x);
+                        const y = yAxis.getPixelForValue(point.y);
+                        ctx.fillText(point.id, x, y);
+                    });
+                }
+            }]
+        });
+    </script>
+</body>
+</html>
